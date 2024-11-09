@@ -6,11 +6,10 @@ import '@/styles/globals.css';
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
-      <Script
-        src="https://telegram.org/js/telegram-web-app.js"
-        strategy="beforeInteractive"
-        crossOrigin="anonymous"
-      />
+     <Script
+  src="/api/telegram-script"
+  strategy="beforeInteractive"
+/>
       <TelegramProvider>
         <Component {...pageProps} />
       </TelegramProvider>
