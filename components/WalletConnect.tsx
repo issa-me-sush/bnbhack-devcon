@@ -13,10 +13,10 @@ export function WalletConnect() {
   const connectWallet = async () => {
     setIsConnecting(true);
     try {
-      if (typeof window.ethereum !== 'undefined') {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
+      if (typeof window !== 'undefined' && window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum as any);
         
+        await provider.send("eth_requestAccounts", []);
         const signer = provider.getSigner();
         const address = await signer.getAddress();
         const balance = await provider.getBalance(address);
