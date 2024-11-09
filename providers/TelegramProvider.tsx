@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from 'react';
 import { useTelegram } from '@/hooks/useTelegram';
-
+import { TonConnectUIProvider } from '@tonconnect/ui-react';
 interface TelegramContextType {
   webApp: any;
   user: any;
@@ -27,14 +27,21 @@ const TelegramContext = createContext<TelegramContextType>({
   isReady: false,
 });
 
+
 export function TelegramProvider({ children }: { children: React.ReactNode }) {
-  const telegram = useTelegram();
-
-  return (
-    <TelegramContext.Provider value={telegram}>
-      {children}
-    </TelegramContext.Provider>
-  );
-}
-
+    const telegram = useTelegram();
+  
+    return (
+      <TonConnectUIProvider 
+        manifestUrl="/tonconnect-manifest.json"
+        actionsConfiguration={{
+          twaReturnUrl: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`
+        }}
+      >
+        <TelegramContext.Provider value={telegram}>
+          {children}
+        </TelegramContext.Provider>
+      </TonConnectUIProvider>
+    );
+  }
 export const useTelegramContext = () => useContext(TelegramContext);
