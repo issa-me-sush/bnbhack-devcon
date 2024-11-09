@@ -9,19 +9,20 @@ export default function Home() {
   const { webApp, isReady, user, theme } = useTelegramContext();
 
   useEffect(() => {
-    if (isReady && webApp) {
-      // Initialize any necessary Telegram WebApp features
-      webApp.enableClosingConfirmation();
-    }
+    console.log('Home component mounted');
+    console.log('WebApp status:', { isReady, webApp });
   }, [isReady, webApp]);
 
   if (!isReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen flex-col items-center justify-center p-4">
         <div 
-          className="animate-spin rounded-full h-12 w-12 border-b-2"
-          style={{ borderColor: theme.buttonColor }}
+          className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4"
+          style={{ borderColor: '#3390ec' }}
         />
+        <p>
+          Initializing Telegram WebApp...
+        </p>
       </div>
     );
   }
