@@ -13,7 +13,7 @@ interface CreateExpenseModalProps {
 
 export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps) {
   const { theme, webApp, user } = useTelegramContext();
-  const { authenticated,  login } = usePrivy();
+  const { authenticated,  login , user: privyUser} = usePrivy();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [participants, setParticipants] = useState('');
@@ -70,7 +70,7 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
               participants: participantUsernames, // Backend will handle ID resolution
               createdById: webApp.initDataUnsafe.user.id,
               createdByUsername: webApp.initDataUnsafe.user.username || 'Unknown',
-              creatorWallet: user?.wallet.address
+              creatorWallet: privyUser?.wallet?.address
             })
           });
     
