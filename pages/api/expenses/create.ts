@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/utils/dbConnect';
-import Expense from '@/models/Expense';
+import Expense from '@/models/expense';
 
 export default async function handler(
   req: NextApiRequest,
