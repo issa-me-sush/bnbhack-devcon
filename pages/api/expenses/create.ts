@@ -12,20 +12,31 @@ export default async function handler(
 
   try {
     await dbConnect();
-    const { amount, description, creatorId, walletAddress, participantIds } = req.body;
+    const { amount, description, creatorId, creatorWallet, participantIds } = req.body;
+
+    // Calculate split amount
+    const splitAmount = amount / (participantIds.length || 1);
 
     const expense = await Expense.create({
       amount,
       description,
       creatorId,
-      walletAddress,
-      participantIds
+      creatorWallet,
+      splits: participantIds.map((id: number) => ({
+        telegramId: id,
+        amount: splitAmount,
+        paid: false
+      }))
     });
 
-    return res.status(200).json({ success: true, expense });
+    return res.status(200).json({ 
+      success: true, 
+      expense,
+      paymentLink: `https://t.me/splitbnb_bot/splitbnb?startapp=expense_${expense._id}`
+    });
 
   } catch (error) {
-    console.error('Error creating expense:', error);
+    console.error('Error:', error);
     return res.status(500).json({ success: false, error: 'Failed to create expense' });
   }
 }

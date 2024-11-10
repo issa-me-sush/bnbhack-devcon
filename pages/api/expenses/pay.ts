@@ -12,26 +12,24 @@ export default async function handler(
 
   try {
     await dbConnect();
-    const { expenseId, telegramUsername, txHash, walletAddress } = req.body;
+    const { expenseId, telegramId, txHash } = req.body;
 
     const expense = await Expense.findOneAndUpdate(
       { 
         _id: expenseId, 
-        'participants.telegramUsername': telegramUsername 
+        'splits.telegramId': telegramId 
       },
       {
         $set: {
-          'participants.$.paid': true,
-          'participants.$.walletAddress': walletAddress,
-          'participants.$.txHash': txHash,
-          'participants.$.paidAt': new Date()
+          'splits.$.paid': true,
+          'splits.$.txHash': txHash
         }
       },
       { new: true }
     );
 
     if (!expense) {
-      return res.status(404).json({ success: false, error: 'Expense or participant not found' });
+      return res.status(404).json({ success: false, error: 'Expense not found' });
     }
 
     return res.status(200).json({ success: true, expense });

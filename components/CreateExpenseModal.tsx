@@ -10,42 +10,29 @@ interface CreateExpenseModalProps {
 }
 
 export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps) {
-  const { theme, webApp, user } = useTelegramContext();
-  const { authenticated,  login , user: privyUser} = usePrivy();
+  const { theme, webApp } = useTelegramContext();
+  const { authenticated, login, user: privyUser } = usePrivy();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [participants, setParticipants] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const showError = (message: string) => {
-    // Check if we're in Telegram environment
-    if (webApp ) {
-    //   webApp?.showAlert({
-    //     title: 'Error',
-    //     message,
-    //     buttons: [{ type: 'close' }]
-    //   });
-    console.log('error , close' ,message)
-    } else {
-      setError(message);
-    }
-  };
+  const [message, setMessage] = useState('');
+  const [participants, setParticipants] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setMessage('');
 
     if (!webApp?.initDataUnsafe?.user?.id) {
-      showError('Please open this in Telegram');
+      setMessage('Please open in Telegram');
       return;
     }
 
-    if (!authenticated || !privyUser?.wallet) {
+    if (!authenticated || !privyUser?.wallet?.address) {
       try {
         await login();
         return;
       } catch (error) {
-        showError('Please connect your wallet first');
+        setMessage('Please connect wallet');
         return;
       }
     }
@@ -53,38 +40,30 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
     setLoading(true);
 
     try {
-      // Simplest possible participant handling
-      const participantList = participants
-        .split(',')
-        .map(p => p.trim())
-        .filter(Boolean);
-
       const response = await fetch('/api/expenses/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          totalAmount: parseFloat(amount),
+          amount: parseFloat(amount),
           description,
-          participants: participantList,
-          telegramId: webApp.initDataUnsafe.user.id,
-          walletAddress: privyUser.wallet.address
+          creatorId: webApp.initDataUnsafe.user.id,
+          creatorWallet: privyUser.wallet.address,
+          participantIds: [webApp.initDataUnsafe.user.id] // Just creator for now
         })
       });
 
       const data = await response.json();
       
       if (data.success) {
+        // Copy payment link
+        await navigator.clipboard.writeText(data.paymentLink);
         setAmount('');
         setDescription('');
-        setParticipants('');
         onClose();
-        showError('Expense created! Link copied to clipboard.');
-      } else {
-        throw new Error(data.error || 'Failed to create expense');
+        setMessage('Expense created! Link copied.');
       }
     } catch (error) {
-      console.error('Error:', error);
-      showError('Failed to create expense');
+      setMessage('Failed to create expense');
     } finally {
       setLoading(false);
     }
@@ -117,7 +96,7 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
               </button>
             </div>
 
-            {error && (
+            {message && (
               <div 
                 className="p-3 rounded-xl mb-4 text-center"
                 style={{ 
@@ -125,7 +104,7 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
                   color: theme.textColor 
                 }}
               >
-                {error}
+                {message}
               </div>
             )}
 
