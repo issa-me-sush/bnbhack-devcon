@@ -22,8 +22,11 @@ function ActionButton({ icon, label, onClick }: ActionButtonProps) {
     </button>
   );
 }
-
-export function Actions() {
+interface ActionsProps {
+    onCreateExpense: () => void;
+  }
+  
+export function Actions({ onCreateExpense }: ActionsProps) {
   const { webApp } = useTelegramContext();
 
   const actions = [
@@ -32,11 +35,11 @@ export function Actions() {
       label: 'Swap',
       onClick: () => webApp?.showAlert('Swap coming soon!')
     },
-    {
-      icon: 'https://api.iconify.design/solar:users-group-rounded-bold.svg?color=black',
-      label: 'Split',
-      onClick: () => webApp?.showAlert('Split coming soon!')
-    },
+    // {
+    //   icon: 'https://api.iconify.design/solar:users-group-rounded-bold.svg?color=black',
+    //   label: 'Split',
+    //   onClick: () => webApp?.showAlert('Split coming soon!')
+    // },
     {
       icon: 'https://api.iconify.design/solar:card-transfer-bold.svg?color=black',
       label: 'Send',
@@ -54,6 +57,20 @@ export function Actions() {
       {actions.map((action) => (
         <ActionButton key={action.label} {...action} />
       ))}
+
+     < button
+        onClick={onCreateExpense}
+        className="p-4 rounded-xl flex flex-col items-center justify-center gap-2"
+        // style={{ backgroundColor: theme.secondaryBgColor }}
+      >
+        <span className="text-2xl">👥</span>
+        <span 
+          className="text-sm font-medium"
+        //   style={{ color: theme.textColor }}
+        >
+          Group Expense
+        </span>
+      </button>
     </div>
   );
 }

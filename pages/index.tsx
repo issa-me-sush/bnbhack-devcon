@@ -1,18 +1,33 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // Add useState
 import { useTelegramContext } from '@/providers/TelegramProvider';
 import { TonWallet } from '@/components/TonWallet';
 import { Actions } from '@/components/Actions';
 import { SendTransaction } from '@/components/SendTransaction';
 import { TransactionHistory } from '@/components/TransactionHistory';
+import { CreateExpenseModal } from '@/components/CreateExpenseModal'; // Add this
 
 export default function Home() {
   const { webApp, isReady, user, theme } = useTelegramContext();
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false); // Add this
 
   useEffect(() => {
     if (isReady && webApp) {
       webApp.expand();
+    }
+  }, [isReady, webApp]);
+
+  // Check if this is an expense payment link
+  useEffect(() => {
+    if (isReady && webApp) {
+      const startParam = webApp.initDataUnsafe?.start_param;
+      if (startParam?.startsWith('expense_')) {
+        // Handle expense payment flow
+        const expenseId = startParam.replace('expense_', '');
+        // Redirect to expense payment page or show payment modal
+        window.location.href = `/expense/${expenseId}`;
+      }
     }
   }, [isReady, webApp]);
 
@@ -48,9 +63,15 @@ export default function Home() {
       </header>
 
       <TonWallet />
-      <Actions />
+      <Actions onCreateExpense={() => setIsExpenseModalOpen(true)} /> {/* Add prop */}
       <SendTransaction />
       <TransactionHistory />
+
+      {/* Add Modal */}
+      <CreateExpenseModal 
+        isOpen={isExpenseModalOpen}
+        onClose={() => setIsExpenseModalOpen(false)}
+      />
     </main>
   );
 }

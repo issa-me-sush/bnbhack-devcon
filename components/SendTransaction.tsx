@@ -32,7 +32,8 @@ export function SendTransaction() {
 
   return (
     <Card className="w-full">
-      <div className="space-y-4">
+      <></>
+      {/* <div className="space-y-4">
         <h2 
           className="text-lg font-bold"
           style={{ color: theme.textColor }}
@@ -62,7 +63,7 @@ export function SendTransaction() {
         >
           Send TON
         </button>
-      </div>
+      </div> */}
     </Card>
   );
 }
