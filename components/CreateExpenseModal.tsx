@@ -34,7 +34,7 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
           amount: parseFloat(amount),
           description,
           creatorId: webApp?.initDataUnsafe?.user?.id || 123456789, // Fallback for testing
-          walletAddress: user?.wallet.address,
+          walletAddress: user?.wallet?.address,
           participantIds: [webApp?.initDataUnsafe?.user?.id || 123456789] // Just creator for now
         })
       });
