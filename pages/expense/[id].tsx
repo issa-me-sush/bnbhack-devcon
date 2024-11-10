@@ -128,17 +128,17 @@ export default function ExpensePayment() {
             // @ts-ignore 
 
       await fetchExpense(expense._id);
-      webApp.showPopup({
-        title: 'Payment Successful!',
-        // @ts-ignore 
-        message: `You've paid ${participant.amount} BNB to ${expense.createdBy}`,
-        buttons: [{ type: 'close' }]
-      });
+    //   webApp.showAlert({
+    //     title: 'Payment Successful!',
+    //     // @ts-ignore 
+    //     message: `You've paid ${participant.amount} BNB to ${expense.createdBy}`,
+    //     buttons: [{ type: 'close' }]
+    //   });
 
     } catch (error) {
       console.error('Payment failed:', error);
             // @ts-ignore 
-      webApp.showAlert(error.message || 'Payment failed');
+      webApp?.showAlert(error.message || 'Payment failed');
     } finally {
       setLoading(false);
     }
