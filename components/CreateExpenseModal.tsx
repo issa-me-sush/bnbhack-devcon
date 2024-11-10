@@ -87,6 +87,7 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
       }
     } catch (error) {
       console.error('Error:', error);
+    //   @ts-ignore 
       webApp.showAlert(error?.message || 'Failed to create expense');
     } finally {
       setLoading(false);
