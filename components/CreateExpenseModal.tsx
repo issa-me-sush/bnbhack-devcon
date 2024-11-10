@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState } from 'react';
@@ -35,14 +33,19 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(''); // Clear any previous errors
+    setError('');
 
-    if (!authenticated ) {
+    if (!webApp?.initDataUnsafe?.user?.id) {
+      showError('Please open this in Telegram');
+      return;
+    }
+
+    if (!authenticated || !privyUser?.wallet) {
       try {
         await login();
         return;
       } catch (error) {
-        showError('Please connect your wallet to create an expense');
+        showError('Please connect your wallet first');
         return;
       }
     }
@@ -50,63 +53,32 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
     setLoading(true);
 
     try {
-        const participantUsernames = participants
+      // Simplest possible participant handling
+      const participantList = participants
         .split(',')
         .map(p => p.trim())
-        .filter(p => p.startsWith('@'));
+        .filter(Boolean);
 
+      const response = await fetch('/api/expenses/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          totalAmount: parseFloat(amount),
+          description,
+          participants: participantList,
+          telegramId: webApp.initDataUnsafe.user.id,
+          walletAddress: privyUser.wallet.address
+        })
+      });
 
-        if (participantUsernames.length === 0) {
-            throw new Error('Please add at least one participant');
-          }
-    
-          // Create expense with creator's Telegram ID
-          const response = await fetch('/api/expenses/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              totalAmount: parseFloat(amount),
-              description,
-              participants: participantUsernames, // Backend will handle ID resolution
-              createdById: webApp.initDataUnsafe.user.id,
-              createdByUsername: webApp.initDataUnsafe.user.username || 'Unknown',
-              creatorWallet: privyUser?.wallet?.address
-            })
-          });
-    
-          const data = await response.json();
-
+      const data = await response.json();
+      
       if (data.success) {
-        onClose();
-        // Clear form
         setAmount('');
         setDescription('');
         setParticipants('');
-        
-        // Use showPopup instead of showAlert
-        if (webApp && typeof webApp.showPopup === 'function') {
-          webApp.showPopup({
-            title: 'Expense Created!',
-            message: `Total: ${amount} BNB\nPer person: ${(parseFloat(amount) / participantUsernames.length).toFixed(4)} BNB\n\nShare this link with participants:`,
-            buttons: [
-              {
-                type: 'default',
-                text: 'Copy Link',
-                onClick: () => {
-                  navigator.clipboard.writeText(
-                    `https://t.me/splitbnb_bot/splitbnb?startapp=expense_${data.expense._id}`
-                  );
-                  // Use showPopup for confirmation too
-                  webApp.showPopup({
-                    message: 'Link copied to clipboard!',
-                    buttons: [{ type: 'close' }]
-                  });
-                }
-              },
-              { type: 'close' }
-            ]
-          });
-        }
+        onClose();
+        showError('Expense created! Link copied to clipboard.');
       } else {
         throw new Error(data.error || 'Failed to create expense');
       }

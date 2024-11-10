@@ -12,82 +12,24 @@ export default async function handler(
 
   try {
     await dbConnect();
-    const { 
-      totalAmount, 
-      description, 
-      participants, 
-      createdById,
-      createdByUsername,
-      creatorWallet 
-    } = req.body;
-
-    // Validate required fields
-    if (!totalAmount || isNaN(totalAmount) || totalAmount <= 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Invalid amount' 
-      });
-    }
-
-    if (!description || typeof description !== 'string') {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Description is required' 
-      });
-    }
-
-    if (!Array.isArray(participants) || participants.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'At least one participant is required' 
-      });
-    }
-
-    if (!createdById || !createdByUsername || !creatorWallet) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Creator information is missing' 
-      });
-    }
-
-    // Validate participant usernames
-    const validParticipants = participants.every(p => 
-      typeof p === 'string' && 
-      p.startsWith('@') && 
-      p.length > 1
-    );
-
-    if (!validParticipants) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Invalid participant username format' 
-      });
-    }
+    const { totalAmount, description, participants, telegramId, walletAddress } = req.body;
 
     const expense = await Expense.create({
       totalAmount,
       description,
-      createdById,
-      createdByUsername,
-      creatorWallet,
-      participants: participants.map((username: string) => ({
-        telegramUsername: username,
+      createdBy: telegramId,
+      creatorWallet: walletAddress,
+      participants: participants.map((p: string) => ({
+        telegramUsername: p,
         amount: totalAmount / participants.length,
         paid: false
       }))
     });
 
-    return res.status(200).json({ 
-      success: true, 
-      expense,
-      paymentLink: `https://t.me/splitbnb_bot/splitbnb?startapp=expense_${expense._id}`
-    });
+    return res.status(200).json({ success: true, expense });
 
   } catch (error) {
     console.error('Error creating expense:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to create expense' 
-    });
+    return res.status(500).json({ success: false, error: 'Failed to create expense' });
   }
 }
