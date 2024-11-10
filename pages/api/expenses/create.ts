@@ -12,15 +12,24 @@ export default async function handler(
 
   try {
     await dbConnect();
-    const { totalAmount, description, participants, createdBy, creatorWallet } = req.body;
+    const { 
+      totalAmount, 
+      description, 
+      participants, 
+      createdById,
+      createdByUsername,
+      creatorWallet 
+    } = req.body;
 
     const expense = await Expense.create({
       totalAmount,
       description,
-      createdBy,
+      createdById, // Store Telegram user ID
+      createdByUsername, // Store username for display
       creatorWallet,
       participants: participants.map((username: string) => ({
-        telegramUsername: username,
+        telegramUsername: username, // Store username for now
+        // We'll get the ID when they actually open the payment link
         amount: totalAmount / participants.length,
         paid: false
       }))

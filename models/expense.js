@@ -9,15 +9,21 @@ const ExpenseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  createdBy: {
+  createdById: {
+    type: Number, // Telegram user ID is numeric
+    required: true,
+  },
+  createdByUsername: {
     type: String,
-    required: true, // Telegram username
+    required: true,
+  },
+  creatorWallet: {
+    type: String,
+    required: true,
   },
   participants: [{
-    telegramUsername: {
-      type: String,
-      required: true,
-    },
+    telegramUsername: String,
+    telegramId: Number, // Will be filled when they open payment link
     amount: {
       type: Number,
       required: true,
@@ -36,17 +42,5 @@ const ExpenseSchema = new mongoose.Schema({
     default: 'PENDING'
   }
 }, { timestamps: true });
-
-// Add index for faster queries
-ExpenseSchema.index({ createdBy: 1 });
-ExpenseSchema.index({ 'participants.telegramUsername': 1 });
-
-// Auto-update status when all participants have paid
-ExpenseSchema.pre('save', function(next) {
-  if (this.participants.every(p => p.paid) && this.status !== 'COMPLETED') {
-    this.status = 'COMPLETED';
-  }
-  next();
-});
 
 export default mongoose.models.Expense || mongoose.model('Expense', ExpenseSchema);

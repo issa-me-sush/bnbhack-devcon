@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState } from 'react';
@@ -11,21 +13,36 @@ interface CreateExpenseModalProps {
 
 export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps) {
   const { theme, webApp, user } = useTelegramContext();
-  const { authenticated, login } = usePrivy();
+  const { authenticated,  login } = usePrivy();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [participants, setParticipants] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const showError = (message: string) => {
+    // Check if we're in Telegram environment
+    if (webApp && typeof webApp.showPopup === 'function') {
+      webApp.showPopup({
+        title: 'Error',
+        message,
+        buttons: [{ type: 'close' }]
+      });
+    } else {
+      setError(message);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(''); // Clear any previous errors
 
     if (!authenticated ) {
       try {
         await login();
         return;
       } catch (error) {
-        webApp.showAlert('Please connect your wallet to create an expense');
+        showError('Please connect your wallet to create an expense');
         return;
       }
     }
@@ -33,30 +50,32 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
     setLoading(true);
 
     try {
-      const participantList = participants
+        const participantUsernames = participants
         .split(',')
         .map(p => p.trim())
         .filter(p => p.startsWith('@'));
 
-      if (participantList.length === 0) {
-        throw new Error('Please add at least one participant');
-      }
 
-      const response = await fetch('/api/expenses/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          totalAmount: parseFloat(amount),
-          description,
-          participants: participantList,
-          createdBy: user.username,
-          creatorWallet: user?.wallet.address, // Add creator's wallet address
-          amountPerPerson: parseFloat(amount) / participantList.length
-        })
-      });
+        if (participantUsernames.length === 0) {
+            throw new Error('Please add at least one participant');
+          }
+    
+          // Create expense with creator's Telegram ID
+          const response = await fetch('/api/expenses/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              totalAmount: parseFloat(amount),
+              description,
+              participants: participantUsernames, // Backend will handle ID resolution
+              createdById: webApp.initDataUnsafe.user.id,
+              createdByUsername: webApp.initDataUnsafe.user.username || 'Unknown',
+              creatorWallet: user?.wallet.address
+            })
+          });
+    
+          const data = await response.json();
 
-      const data = await response.json();
-      
       if (data.success) {
         onClose();
         // Clear form
@@ -64,64 +83,81 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
         setDescription('');
         setParticipants('');
         
-        webApp.showPopup({
-          title: 'Expense Created!',
-          message: `Total: ${amount} BNB\nPer person: ${(parseFloat(amount) / participantList.length).toFixed(4)} BNB\n\nShare this link with participants:`,
-          buttons: [
-            {
-              type: 'default',
-              text: 'Copy Link',
-              onClick: () => {
-                navigator.clipboard.writeText(
-                  `https://t.me/splitbnb_bot/splitbnb?startapp=expense_${data.expense._id}`
-                );
-                webApp.showAlert('Link copied to clipboard!');
-              }
-            },
-            {
-              type: 'close',
-              text: 'Close'
-            }
-          ]
-        });
+        // Use showPopup instead of showAlert
+        if (webApp && typeof webApp.showPopup === 'function') {
+          webApp.showPopup({
+            title: 'Expense Created!',
+            message: `Total: ${amount} BNB\nPer person: ${(parseFloat(amount) / participantUsernames.length).toFixed(4)} BNB\n\nShare this link with participants:`,
+            buttons: [
+              {
+                type: 'default',
+                text: 'Copy Link',
+                onClick: () => {
+                  navigator.clipboard.writeText(
+                    `https://t.me/splitbnb_bot/splitbnb?startapp=expense_${data.expense._id}`
+                  );
+                  // Use showPopup for confirmation too
+                  webApp.showPopup({
+                    message: 'Link copied to clipboard!',
+                    buttons: [{ type: 'close' }]
+                  });
+                }
+              },
+              { type: 'close' }
+            ]
+          });
+        }
+      } else {
+        throw new Error(data.error || 'Failed to create expense');
       }
     } catch (error) {
       console.error('Error:', error);
-    //   @ts-ignore 
-      webApp.showAlert(error?.message || 'Failed to create expense');
+      showError(error instanceof Error ? error.message : 'Failed to create expense');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div 
-      className="fixed inset-0 flex items-center justify-center z-50 p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-    >
-      <div 
-        className="w-full max-w-md rounded-xl p-4"
-        style={{ backgroundColor: theme.backgroundColor }}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 
-            className="text-lg font-bold"
-            style={{ color: theme.textColor }}
+    <>
+      {isOpen && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
+          <div 
+            className="w-full max-w-md rounded-xl p-4"
+            style={{ backgroundColor: theme.backgroundColor }}
           >
-            Create Group Expense
-          </h2>
-          <button 
-            onClick={onClose}
-            className="p-2"
-            style={{ color: theme.textColor }}
-          >
-            ✕
-          </button>
-        </div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 
+                className="text-lg font-bold"
+                style={{ color: theme.textColor }}
+              >
+                Create Group Expense
+              </h2>
+              <button 
+                onClick={onClose}
+                className="p-2"
+                style={{ color: theme.textColor }}
+              >
+                ✕
+              </button>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div 
+                className="p-3 rounded-xl mb-4 text-center"
+                style={{ 
+                //   backgroundColor: theme.secondaryBgColor,
+                  color: theme.textColor 
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+<form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label 
               className="block text-sm mb-1 opacity-75"
@@ -224,7 +260,9 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
             </button>
           </div>
         </form>
-      </div>
-    </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

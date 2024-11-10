@@ -32,36 +32,43 @@ export default function ExpensePayment() {
 
   const fetchExpense = async (expenseId: string) => {
     try {
+      if (!webApp?.initDataUnsafe?.user?.id) {
+        setError('Please open this link in Telegram');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`/api/expenses/${expenseId}`);
       const data = await response.json();
       
       if (data.success) {
+        const currentUserId = webApp.initDataUnsafe.user.id;
         const currentUsername = webApp.initDataUnsafe.user.username;
         
-        // Verify if user is a participant or creator
-        const isParticipant = data.expense.participants.some(
-                  // @ts-ignore 
-          p => p.telegramUsername === `@${currentUsername}`
-        );
-        const isCreator = data.expense.createdBy === `@${currentUsername}`;
-
-        if (!isParticipant && !isCreator) {
-          setError('You are not authorized to view this expense');
-          setExpense(null);
-        } else {
-          setExpense(data.expense);
-          setError('');
+        // Update participant's Telegram ID if not already set
+        // @ts-ignore 
+        if (!data.expense.participants.some(p => p.telegramId === currentUserId)) {
+          await fetch(`/api/expenses/updateParticipant`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              expenseId,
+              username: `@${currentUsername}`,
+              telegramId: currentUserId
+            })
+          });
         }
-      } else {
-        setError('Failed to load expense details');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Failed to load expense');
-    } finally {
-      setLoading(false);
+
+        setExpense(data.expense);
+
     }
-  };
+} catch (error) {
+  console.error('Error:', error);
+  setError('Failed to load expense');
+} finally {
+  setLoading(false);
+}
+};
 
   const handlePayment = async () => {
     if (!authenticated) {

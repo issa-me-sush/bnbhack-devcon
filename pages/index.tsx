@@ -53,7 +53,7 @@ export default function Home() {
     >
       <header className="w-full">
         <h1 className="text-2xl font-bold mb-1">
-          ChainChat
+         SplitBNB
         </h1>
         {user && (
           <p className="text-sm opacity-75">
