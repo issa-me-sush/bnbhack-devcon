@@ -1,7 +1,5 @@
 {
     "url": "https://bnbhack-devcon.vercel.app",
     "name": "splitbnb",
-    "iconUrl": "https://ton.vote/logo.png",
-    "termsOfUseUrl": "",
-    "privacyPolicyUrl": ""
+    "iconUrl": "https://ton.vote/logo.png"
   }
