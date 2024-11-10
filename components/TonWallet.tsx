@@ -1,18 +1,58 @@
 'use client';
 
-import { useTonAddress, useTonWallet, useTonConnectUI } from '@tonconnect/ui-react';
+import { useTonAddress, useTonWallet, useTonConnectUI  , useTonConnectModal} from '@tonconnect/ui-react';
 import { useTelegramContext } from '@/providers/TelegramProvider';
 import { Card } from './Card';
-
+import { useEffect } from 'react';
 export function TonWallet() {
   const { theme } = useTelegramContext();
   const wallet = useTonWallet();
   const userAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
+  const { state, open, close } = useTonConnectModal();
 
-  const handleConnect = () => {
-    tonConnectUI.openModal();
+  // const handleConnect = () => {
+  //   // tonConnectUI.openModal();
+  //   open()
+  // };
+
+  useEffect(() => {
+    console.log('TON Wallet State:', {
+      wallet,
+      userAddress,
+      modalState: state,
+      tonConnectUI: !!tonConnectUI
+    });
+  }, [wallet, userAddress, state, tonConnectUI]);
+
+  const handleConnect = async () => {
+    try {
+      console.log('Attempting to connect wallet...');
+      open();
+      
+      // Optional: Add listener for connection status
+      tonConnectUI.onStatusChange((wallet) => {
+        console.log('Wallet status changed:', wallet);
+      });
+
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+      // Optionally show user-friendly error
+      alert('Failed to connect wallet. Please try again.');
+    }
   };
+
+  // Add error boundary
+  if (!tonConnectUI) {
+    console.error('TON Connect UI not initialized');
+    return (
+      <Card className="w-full">
+        <div className="text-red-500">
+          Failed to initialize TON Connect. Please refresh the page.
+        </div>
+      </Card>
+    );
+  }
 
   if (!wallet) {
     return (
@@ -47,6 +87,16 @@ export function TonWallet() {
       </Card>
     );
   }
+
+
+   // Log wallet details when connected
+   console.log('Connected wallet details:', {
+    // @ts-ignore 
+    name: wallet.name,
+        // @ts-ignore 
+    balance: wallet.account.balance,
+    address: userAddress
+  });
 
   return (
     <Card className="w-full">
