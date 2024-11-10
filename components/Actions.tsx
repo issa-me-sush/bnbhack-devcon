@@ -28,22 +28,22 @@ export function Actions() {
 
   const actions = [
     {
-      icon: 'https://api.iconify.design/solar:swap-bold.svg?color=white',
+      icon: 'https://api.iconify.design/iconamoon:swap-fill.svg?color=white`',
       label: 'Swap',
       onClick: () => webApp?.showAlert('Swap coming soon!')
     },
     {
-      icon: 'https://api.iconify.design/solar:users-group-rounded-bold.svg?color=white',
+      icon: 'https://api.iconify.design/solar:users-group-rounded-bold.svg?color=black',
       label: 'Split',
       onClick: () => webApp?.showAlert('Split coming soon!')
     },
     {
-      icon: 'https://api.iconify.design/solar:card-transfer-bold.svg?color=white',
+      icon: 'https://api.iconify.design/solar:card-transfer-bold.svg?color=black',
       label: 'Send',
       onClick: () => webApp?.showAlert('Send coming soon!')
     },
     {
-      icon: 'https://api.iconify.design/solar:history-bold.svg?color=white',
+      icon: 'https://api.iconify.design/solar:history-bold.svg?color=black',
       label: 'History',
       onClick: () => webApp?.showAlert('History coming soon!')
     }

@@ -45,9 +45,9 @@ export function TransactionHistory() {
           >
             <div className="flex items-center gap-3">
               <img 
-                src={`https://api.iconify.design/solar:${tx.type}-bold.svg?color=white`}
+                src={`https://api.iconify.design/fluent:arrow-swap-16-filled.svg?color=black`}
                 alt={tx.type}
-                className="w-6 h-6"
+                className="w-6 h-6 "
               />
               <div className="flex flex-col">
                 <span style={{ color: theme.textColor }}>{tx.title}</span>
