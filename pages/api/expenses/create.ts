@@ -12,18 +12,14 @@ export default async function handler(
 
   try {
     await dbConnect();
-    const { totalAmount, description, participants, telegramId, walletAddress } = req.body;
+    const { amount, description, creatorId, walletAddress, participantIds } = req.body;
 
     const expense = await Expense.create({
-      totalAmount,
+      amount,
       description,
-      createdBy: telegramId,
-      creatorWallet: walletAddress,
-      participants: participants.map((p: string) => ({
-        telegramUsername: p,
-        amount: totalAmount / participants.length,
-        paid: false
-      }))
+      creatorId,
+      walletAddress,
+      participantIds
     });
 
     return res.status(200).json({ success: true, expense });

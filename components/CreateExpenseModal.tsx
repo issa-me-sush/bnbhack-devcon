@@ -33,7 +33,6 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!webApp?.initDataUnsafe?.user?.id) {
       showError('Please open this in Telegram');
@@ -53,21 +52,15 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
     setLoading(true);
 
     try {
-      // Simplest possible participant handling
-      const participantList = participants
-        .split(',')
-        .map(p => p.trim())
-        .filter(Boolean);
-
       const response = await fetch('/api/expenses/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          totalAmount: parseFloat(amount),
+          amount: parseFloat(amount),
           description,
-          participants: participantList,
-          telegramId: webApp.initDataUnsafe.user.id,
-          walletAddress: privyUser.wallet.address
+          creatorId: webApp.initDataUnsafe.user.id,
+          walletAddress: privyUser.wallet.address,
+          participantIds: [webApp.initDataUnsafe.user.id]
         })
       });
 
@@ -79,12 +72,10 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
         setParticipants('');
         onClose();
         showError('Expense created! Link copied to clipboard.');
-      } else {
-        throw new Error(data.error || 'Failed to create expense');
       }
     } catch (error) {
       console.error('Error:', error);
-      showError(error instanceof Error ? error.message : 'Failed to create expense');
+      showError('Failed to create expense');
     } finally {
       setLoading(false);
     }
